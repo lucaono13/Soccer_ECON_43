@@ -1,0 +1,916 @@
+---
+title: "Econ 43 European Teams"
+author: "Gianluca Onorato"
+date: "December 8, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Clear the working space
+rm(list = ls())
+
+#Set Working Directory
+setwd("C:/Users/giono/Box Sync/ECON 43 Indiv. Proj/")
+
+#install.packages("devtools")
+#library(devtools)
+#install_github('jalapic/engsoccerdata', username = "jalapic")
+#install.packages("plotly")
+library(engsoccerdata)
+library(plotly)
+
+#Load .csv files
+ligue1 <- read.csv("france.csv")
+serieA <- read.csv("italy.csv")
+premier <- read.csv("england.csv") 
+bundes <- read.csv("germany.csv") 
+laliga <- read.csv("spain.csv") 
+```
+
+## Best Teams in Europe (Soccer)
+
+My project was about looking at the best teams in Europe, based on the top 5 teams from the beginning 2011 season until the end of the 2016 season. First to find the top 5, I had to make tables of each league starting from Gameday 1 in 2011 to the final Gameday in 2016. 
+
+```{r italy_table, echo=FALSE}
+#Make table of Serie A from beginning of 2011 season to end of 2016 season
+maketable_all(df = italy,  begin = "2011-09-09", end = "2017-05-28" )
+```
+From this table, we see that the top teams are Juventus, Napoli, Roma, AC Milan, and Lazio.
+
+```{r france_table, echo=FALSE}
+#Make table of Ligue 1 from beginning of 2011 season to end of 2016 season
+maketable_all(df = france,  begin = "2011-08-06", end = "2017-05-20" )
+```
+The table shows that PSG were on top, followed by Lyon, Lille, AS Saint-Etinne, and Marseille.
+```{r england_table, echo=FALSE}
+#Make table of the all English leagues from beginning of 2011 season to end of 2016 season (only need teams with exactly 228 games played as those are the only ones that played in the EPL)
+maketable_all(df = england,  begin = "2011-08-05", end = "2017-05-21" )
+```
+In England, we look at the teams who have played only 228 games as the lower leagues have more teams in the league and thus play more. Here, Manchester City are on top of Chelsea, Manchester United, Arsenal and Tottenham.
+```{r spain_table, echo=FALSE}
+#Make table of La Liga (Spain) from beginning of 2011 season to end of 2016 season
+maketable_all(df = spain,  begin = "2011-08-27", end = "2017-05-21" )
+```
+Many people know that Spain is more of a two-team to three-team league, but the top 5 from here are Barcelona, Real Madrid, Atletico Madrid, Sevilla, and Athletic Bilbao.
+```{r germany_table, echo=FALSE}
+
+#Make table of the Bundesliga (Germany) from beginning of 2011 season to end of 2016 season
+maketable_all(df = germany,  begin = "2011-07-15", end = "2017-05-21" )
+
+```
+The German league had the least amount of games played due to the fact that they have 2 teams less than the other leagues and thus play 4 games less per year.
+
+## Analysis
+
+```{r filter_to_team, include = FALSE}
+
+
+#Juventus games since 2011 season, both home and away
+juveGameshome <- serieA[which(serieA$home == "Juventus") ,]
+juvea2011home <- subset(juveGameshome, juveGameshome$Season >= 2011,
+                    select= c(Season, home, visitor, hgoal, vgoal))
+
+juveGamesaway <- serieA[which(serieA$visitor == "Juventus"),]
+juvea2011away <- subset(juveGamesaway, juveGamesaway$Season >= 2011,
+                        select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+juve_h_win <- nrow(juvea2011home[juvea2011home$hgoal > juvea2011home$vgoal,])
+#Home draws
+juve_h_draw <- nrow(juvea2011home[juvea2011home$hgoal == juvea2011home$vgoal,])
+#Home losses
+juve_h_lost <- nrow(juvea2011home[juvea2011home$hgoal < juvea2011home$vgoal,])
+#Away lost
+juve_a_lost <- nrow(juvea2011away[juvea2011away$hgoal > juvea2011away$vgoal,])
+#Away draws
+juve_a_draw <- nrow(juvea2011away[juvea2011away$hgoal == juvea2011away$vgoal,])
+#Away wins
+juve_a_win <- nrow(juvea2011away[juvea2011away$hgoal < juvea2011away$vgoal,])
+
+#Napoli games in 2011 season
+napoliGameshome <- serieA[which(serieA$home == "SSC Napoli") ,]
+napolia2011home <- subset(napoliGameshome, napoliGameshome$Season >= 2011,
+                          select= c(Season, home, visitor, hgoal, vgoal))
+
+napoliGamesaway <- serieA[which(serieA$visitor == "SSC Napoli"),]
+napolia2011away <- subset(napoliGamesaway, napoliGamesaway$Season >= 2011,
+                          select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+napoli_h_win <- nrow(napolia2011home[napolia2011home$hgoal > napolia2011home$vgoal,])
+#Home draws
+napoli_h_draw <- nrow(napolia2011home[napolia2011home$hgoal == napolia2011home$vgoal,])
+#Home losses
+napoli_h_lost <- nrow(napolia2011home[napolia2011home$hgoal < napolia2011home$vgoal,])
+#Away losses
+napoli_a_lost <- nrow(napolia2011away[napolia2011away$hgoal > napolia2011away$vgoal,])
+#Away draws
+napoli_a_draw <- nrow(napolia2011away[napolia2011away$hgoal == napolia2011away$vgoal,])
+#Away wins
+napoli_a_win <- nrow(napolia2011away[napolia2011away$hgoal < napolia2011away$vgoal,])
+
+#Roma games in 2011 season
+romaGameshome <- serieA[which(serieA$home == "AS Roma") ,]
+romaa2011home <- subset(romaGameshome, romaGameshome$Season >= 2011,
+                         select= c(Season, home, visitor, hgoal, vgoal))
+
+romaGamesaway <- serieA[which(serieA$visitor == "AS Roma"),]
+romaa2011away <- subset(romaGamesaway, romaGamesaway$Season >= 2011,
+                         select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+roma_h_win <- nrow(romaa2011home[romaa2011home$hgoal > romaa2011home$vgoal,])
+#Home draws
+roma_h_draw <- nrow(romaa2011home[romaa2011home$hgoal == romaa2011home$vgoal,])
+#Home losses
+roma_h_lost <- nrow(romaa2011home[romaa2011home$hgoal < romaa2011home$vgoal,])
+#Away losses
+roma_a_lost <- nrow(romaa2011away[romaa2011away$hgoal > romaa2011away$vgoal,])
+#Away draws
+roma_a_draw <- nrow(romaa2011away[romaa2011away$hgoal == romaa2011away$vgoal,])
+#Away wins
+roma_a_win <- nrow(romaa2011away[romaa2011away$hgoal < romaa2011away$vgoal,])
+
+#Milan games in 2011 season
+milanGameshome <- serieA[which(serieA$home == "AC Milan") ,]
+milana2011home <- subset(milanGameshome, milanGameshome$Season >= 2011,
+                          select= c(Season, home, visitor, hgoal, vgoal))
+
+milanGamesaway <- serieA[which(serieA$visitor == "AC Milan"),]
+milana2011away <- subset(milanGamesaway, milanGamesaway$Season >= 2011,
+                          select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+milan_h_win <- nrow(milana2011home[milana2011home$hgoal > milana2011home$vgoal,])
+#Home draws
+milan_h_draw <- nrow(milana2011home[milana2011home$hgoal == milana2011home$vgoal,])
+#Home losses
+milan_h_lost <- nrow(milana2011home[milana2011home$hgoal < milana2011home$vgoal,])
+#Away losses
+milan_a_lost <- nrow(milana2011away[milana2011away$hgoal > milana2011away$vgoal,])
+#Away draws
+milan_a_draw <- nrow(milana2011away[milana2011away$hgoal == milana2011away$vgoal,])
+#Away wins
+milan_a_win <- nrow(milana2011away[milana2011away$hgoal < milana2011away$vgoal,])
+
+
+#Lazio games in 2011 season
+lazioGameshome <- serieA[which(serieA$home == "Lazio Roma") ,]
+lazioa2011home <- subset(lazioGameshome, lazioGameshome$Season >= 2011,
+                         select= c(Season, home, visitor, hgoal, vgoal))
+
+lazioGamesaway <- serieA[which(serieA$visitor == "Lazio Roma"),]
+lazioa2011away <- subset(lazioGamesaway, lazioGamesaway$Season >= 2011,
+                         select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+lazio_h_win <- nrow(lazioa2011home[lazioa2011home$hgoal > lazioa2011home$vgoal,])
+#Home draws
+lazio_h_draw <- nrow(lazioa2011home[lazioa2011home$hgoal == lazioa2011home$vgoal,])
+#Home losses
+lazio_h_lost <- nrow(lazioa2011home[lazioa2011home$hgoal < lazioa2011home$vgoal,])
+#Away losses
+lazio_a_lost <- nrow(lazioa2011away[lazioa2011away$hgoal > lazioa2011away$vgoal,])
+#Away draws
+lazio_a_draw <- nrow(lazioa2011away[lazioa2011away$hgoal == lazioa2011away$vgoal,])
+#Away wins
+lazio_a_win <- nrow(lazioa2011away[lazioa2011away$hgoal < lazioa2011away$vgoal,])
+
+
+
+
+#PSG games in 2011 season
+psgGameshome <- ligue1[which(ligue1$home == "Paris Saint-Germain") ,]
+psga2011home <- subset(psgGameshome, psgGameshome$Season >= 2011,
+                       select= c(Season, home, visitor, hgoal, vgoal))
+
+psgGamesaway <- ligue1[which(ligue1$visitor == "Paris Saint-Germain"),]
+psga2011away <- subset(psgGamesaway, psgGamesaway$Season >= 2011,
+                       select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+psg_h_win <- nrow(psga2011home[psga2011home$hgoal > psga2011home$vgoal,])
+#Home draws
+psg_h_draw <- nrow(psga2011home[psga2011home$hgoal == psga2011home$vgoal,])
+#Home losses
+psg_h_lost <- nrow(psga2011home[psga2011home$hgoal < psga2011home$vgoal,])
+#Away losses
+psg_a_lost <- nrow(psga2011away[psga2011away$hgoal > psga2011away$vgoal,])
+#Away draws
+psg_a_draw <- nrow(psga2011away[psga2011away$hgoal == psga2011away$vgoal,])
+#Away wins
+psg_a_win <- nrow(psga2011away[psga2011away$hgoal < psga2011away$vgoal,])
+
+#Lyon games in 2011 season
+lyonGameshome <- ligue1[which(ligue1$home == "Olympique Lyon") ,]
+lyona2011home <- subset(lyonGameshome, lyonGameshome$Season >= 2011,
+                        select= c(Season, home, visitor, hgoal, vgoal))
+
+lyonGamesaway <- ligue1[which(ligue1$visitor == "Olympique Lyon"),]
+lyona2011away <- subset(lyonGamesaway, lyonGamesaway$Season >= 2011,
+                        select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+lyon_h_win <- nrow(lyona2011home[lyona2011home$hgoal > lyona2011home$vgoal,])
+#Home draws
+lyon_h_draw <- nrow(lyona2011home[lyona2011home$hgoal == lyona2011home$vgoal,])
+#Home losses
+lyon_h_lost <- nrow(lyona2011home[lyona2011home$hgoal < lyona2011home$vgoal,])
+#Away losses
+lyon_a_lost <- nrow(lyona2011away[lyona2011away$hgoal > lyona2011away$vgoal,])
+#Away draws
+lyon_a_draw <- nrow(lyona2011away[lyona2011away$hgoal == lyona2011away$vgoal,])
+#Away wins
+lyon_a_win <- nrow(lyona2011away[lyona2011away$hgoal < lyona2011away$vgoal,])
+
+#Lille games in 2011 season
+lilleGameshome <- ligue1[which(ligue1$home == "Lille OSC") ,]
+lillea2011home <- subset(lilleGameshome, lilleGameshome$Season >= 2011,
+                         select= c(Season, home, visitor, hgoal, vgoal))
+
+lilleGamesaway <- ligue1[which(ligue1$visitor == "Lille OSC"),]
+lillea2011away <- subset(lilleGamesaway, lilleGamesaway$Season >= 2011,
+                         select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+lille_h_win <- nrow(lillea2011home[lillea2011home$hgoal > lillea2011home$vgoal,])
+#Home draws
+lille_h_draw <- nrow(lillea2011home[lillea2011home$hgoal == lillea2011home$vgoal,])
+#Home losses
+lille_h_lost <- nrow(lillea2011home[lillea2011home$hgoal < lillea2011home$vgoal,])
+#Away losses
+lille_a_lost <- nrow(lillea2011away[lillea2011away$hgoal > lillea2011away$vgoal,])
+#Away draws
+lille_a_draw <- nrow(lillea2011away[lillea2011away$hgoal == lillea2011away$vgoal,])
+#Away wins
+lille_a_win <- nrow(lillea2011away[lillea2011away$hgoal < lillea2011away$vgoal,])
+
+#ASSE games in 2011 season
+asseGameshome <- ligue1[which(ligue1$home == "AS Saint-Etienne") ,]
+assea2011home <- subset(asseGameshome, asseGameshome$Season >= 2011,
+                        select= c(Season, home, visitor, hgoal, vgoal))
+
+asseGamesaway <- ligue1[which(ligue1$visitor == "AS Saint-Etienne"),]
+assea2011away <- subset(asseGamesaway, asseGamesaway$Season >= 2011,
+                        select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+asse_h_win <- nrow(assea2011home[assea2011home$hgoal > assea2011home$vgoal,])
+#Home draws
+asse_h_draw <- nrow(assea2011home[assea2011home$hgoal == assea2011home$vgoal,])
+#Home losses
+asse_h_lost <- nrow(assea2011home[assea2011home$hgoal < assea2011home$vgoal,])
+#Away losses
+asse_a_lost <- nrow(assea2011away[assea2011away$hgoal > assea2011away$vgoal,])
+#Away draws
+asse_a_draw <- nrow(assea2011away[assea2011away$hgoal == assea2011away$vgoal,])
+#Away wins
+asse_a_win <- nrow(assea2011away[assea2011away$hgoal < assea2011away$vgoal,])
+
+#Marseille games in 2011 season
+marseilleGameshome <- ligue1[which(ligue1$home == "Olympique Marseille") ,]
+marseillea2011home <- subset(marseilleGameshome, marseilleGameshome$Season >= 2011,
+                             select= c(Season, home, visitor, hgoal, vgoal))
+
+marseilleGamesaway <- ligue1[which(ligue1$visitor == "Olympique Marseille"),]
+marseillea2011away <- subset(marseilleGamesaway, marseilleGamesaway$Season >= 2011,
+                             select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+marseille_h_win <- nrow(marseillea2011home[marseillea2011home$hgoal > marseillea2011home$vgoal,])
+#Home draws
+marseille_h_draw <- nrow(marseillea2011home[marseillea2011home$hgoal == marseillea2011home$vgoal,])
+#Home losses
+marseille_h_lost <- nrow(marseillea2011home[marseillea2011home$hgoal < marseillea2011home$vgoal,])
+#Away losses
+marseille_a_lost <- nrow(marseillea2011away[marseillea2011away$hgoal > marseillea2011away$vgoal,])
+#Away draws
+marseille_a_draw <- nrow(marseillea2011away[marseillea2011away$hgoal == marseillea2011away$vgoal,])
+#Away wins
+marseille_a_win <- nrow(marseillea2011away[marseillea2011away$hgoal < marseillea2011away$vgoal,])
+
+
+#Make table of the all English leagues from beginning of 2011 season to end of 2016 season (only need teams with exactly 228 games played as those are the only ones that played in the EPL)
+maketable_all(df = england,  begin = "2011-08-05", end = "2017-05-21" )
+
+#Manchester City games in 2011 season
+citymanGameshome <- premier[which(premier$home == "Manchester City") ,]
+citymana2011home <- subset(citymanGameshome, citymanGameshome$Season >= 2011,
+                           select= c(Season, home, visitor, hgoal, vgoal))
+
+citymanGamesaway <- premier[which(premier$visitor == "Manchester City"),]
+citymana2011away <- subset(citymanGamesaway, citymanGamesaway$Season >= 2011,
+                           select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+city_h_win <- nrow(citymana2011home[citymana2011home$hgoal > citymana2011home$vgoal,])
+#Home draws
+city_h_draw <- nrow(citymana2011home[citymana2011home$hgoal == citymana2011home$vgoal,])
+#Home losses
+city_h_lost <- nrow(citymana2011home[citymana2011home$hgoal < citymana2011home$vgoal,])
+#Away losses
+city_a_lost <- nrow(citymana2011away[citymana2011away$hgoal > citymana2011away$vgoal,])
+#Away draws
+city_a_draw <- nrow(citymana2011away[citymana2011away$hgoal == citymana2011away$vgoal,])
+#Away wins
+city_a_win <- nrow(citymana2011away[citymana2011away$hgoal < citymana2011away$vgoal,])
+
+#Chelsea games in 2011 season
+chelseaGameshome <- premier[which(premier$home == "Chelsea") ,]
+chelseaa2011home <- subset(chelseaGameshome, chelseaGameshome$Season >= 2011,
+                           select= c(Season, home, visitor, hgoal, vgoal))
+
+chelseaGamesaway <- premier[which(premier$visitor == "Chelsea"),]
+chelseaa2011away <- subset(chelseaGamesaway, chelseaGamesaway$Season >= 2011,
+                           select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+chelsea_h_win <- nrow(chelseaa2011home[chelseaa2011home$hgoal > chelseaa2011home$vgoal,])
+#Home draws
+chelsea_h_draw <- nrow(chelseaa2011home[chelseaa2011home$hgoal == chelseaa2011home$vgoal,])
+#Home losses
+chelsea_h_lost <- nrow(chelseaa2011home[chelseaa2011home$hgoal < chelseaa2011home$vgoal,])
+#Away losses
+chelsea_a_lost <- nrow(chelseaa2011away[chelseaa2011away$hgoal > chelseaa2011away$vgoal,])
+#Away draws
+chelsea_a_draw <- nrow(chelseaa2011away[chelseaa2011away$hgoal == chelseaa2011away$vgoal,])
+#Away wins
+chelsea_a_win <- nrow(chelseaa2011away[chelseaa2011away$hgoal < chelseaa2011away$vgoal,])
+
+#Manchester United games in 2011 season
+manUGameshome <- premier[which(premier$home == "Manchester United") ,]
+manUa2011home <- subset(manUGameshome, manUGameshome$Season >= 2011,
+                        select= c(Season, home, visitor, hgoal, vgoal))
+
+manUGamesaway <- premier[which(premier$visitor == "Manchester United"),]
+manUa2011away <- subset(manUGamesaway, manUGamesaway$Season >= 2011,
+                        select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+united_h_win <- nrow(manUa2011home[manUa2011home$hgoal > manUa2011home$vgoal,])
+#Home draws
+united_h_draw <- nrow(manUa2011home[manUa2011home$hgoal == manUa2011home$vgoal,])
+#Home losses
+united_h_lost <- nrow(manUa2011home[manUa2011home$hgoal < manUa2011home$vgoal,])
+#Away losses
+united_a_lost <- nrow(manUa2011away[manUa2011away$hgoal > manUa2011away$vgoal,])
+#Away draws
+united_a_draw <- nrow(manUa2011away[manUa2011away$hgoal == manUa2011away$vgoal,])
+#Away wins
+united_a_win <- nrow(manUa2011away[manUa2011away$hgoal < manUa2011away$vgoal,])
+
+
+#arsenal games in 2011 season
+arsenalGameshome <- premier[which(premier$home == "Arsenal") ,]
+arsenala2011home <- subset(arsenalGameshome, arsenalGameshome$Season >= 2011,
+                           select= c(Season, home, visitor, hgoal, vgoal))
+
+arsenalGamesaway <- premier[which(premier$visitor == "Arsenal"),]
+arsenala2011away <- subset(arsenalGamesaway, arsenalGamesaway$Season >= 2011,
+                           select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+arsenal_h_win <- nrow(arsenala2011home[arsenala2011home$hgoal > arsenala2011home$vgoal,])
+#Home draws
+arsenal_h_draw <- nrow(arsenala2011home[arsenala2011home$hgoal == arsenala2011home$vgoal,])
+#Home losses
+arsenal_h_lost <- nrow(arsenala2011home[arsenala2011home$hgoal < arsenala2011home$vgoal,])
+#Away losses
+arsenal_a_lost <- nrow(arsenala2011away[arsenala2011away$hgoal > arsenala2011away$vgoal,])
+#Away draws
+arsenal_a_draw <- nrow(arsenala2011away[arsenala2011away$hgoal == arsenala2011away$vgoal,])
+#Away win
+arsenal_a_win <- nrow(arsenala2011away[arsenala2011away$hgoal < arsenala2011away$vgoal,])
+
+#Tottenham Hotspur games in 2011 season
+tottenhamGameshome <- premier[which(premier$home == "Tottenham Hotspur") ,]
+tottenhama2011home <- subset(tottenhamGameshome, tottenhamGameshome$Season >= 2011,
+                             select= c(Season, home, visitor, hgoal, vgoal))
+
+tottenhamGamesaway <- premier[which(premier$visitor == "Tottenham Hotspur"),]
+tottenhama2011away <- subset(tottenhamGamesaway, tottenhamGamesaway$Season >= 2011,
+                             select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+tott_h_win <- nrow(tottenhama2011home[tottenhama2011home$hgoal > tottenhama2011home$vgoal,])
+#Home draws
+tott_h_draw <- nrow(tottenhama2011home[tottenhama2011home$hgoal == tottenhama2011home$vgoal,])
+#Home losses
+tott_h_lost <- nrow(tottenhama2011home[tottenhama2011home$hgoal < tottenhama2011home$vgoal,])
+#Away losses
+tott_a_lost <- nrow(tottenhama2011away[tottenhama2011away$hgoal > tottenhama2011away$vgoal,])
+#Away draws
+tott_a_draw <- nrow(tottenhama2011away[tottenhama2011away$hgoal == tottenhama2011away$vgoal,])
+#Away wins
+tott_a_win <- nrow(tottenhama2011away[tottenhama2011away$hgoal < tottenhama2011away$vgoal,])
+
+
+#Make table of La Liga (Spain) from beginning of 2011 season to end of 2016 season
+maketable_all(df = spain,  begin = "2011-08-27", end = "2017-05-21" )
+
+#FC Barcelona games in 2011 season
+barcaGameshome <- laliga[which(laliga$home == "FC Barcelona") ,]
+barcaa2011home <- subset(barcaGameshome, barcaGameshome$Season >= 2011,
+                         select= c(Season, home, visitor, hgoal, vgoal))
+
+barcaGamesaway <- laliga[which(laliga$visitor == "FC Barcelona"),]
+barcaa2011away <- subset(barcaGamesaway, barcaGamesaway$Season >= 2011,
+                         select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+barca_h_win <- nrow(barcaa2011home[barcaa2011home$hgoal > barcaa2011home$vgoal,])
+#Home draws
+barca_h_draw <- nrow(barcaa2011home[barcaa2011home$hgoal == barcaa2011home$vgoal,])
+#Home losses
+barca_h_lost <- nrow(barcaa2011home[barcaa2011home$hgoal < barcaa2011home$vgoal,])
+#Away losses
+barca_a_lost <- nrow(barcaa2011away[barcaa2011away$hgoal > barcaa2011away$vgoal,])
+#Away draws
+barca_a_draw <- nrow(barcaa2011away[barcaa2011away$hgoal == barcaa2011away$vgoal,])
+#Away wins
+barca_a_win <- nrow(barcaa2011away[barcaa2011away$hgoal < barcaa2011away$vgoal,])
+
+#Real Madrid games in 2011 season
+realGameshome <- laliga[which(laliga$home == "Real Madrid") ,]
+reala2011home <- subset(realGameshome, realGameshome$Season >= 2011,
+                        select= c(Season, home, visitor, hgoal, vgoal))
+
+realGamesaway <- laliga[which(laliga$visitor == "Real Madrid"),]
+reala2011away <- subset(realGamesaway, realGamesaway$Season >= 2011,
+                        select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+real_h_win <- nrow(reala2011home[reala2011home$hgoal > reala2011home$vgoal,])
+#Home draws
+real_h_draw <- nrow(reala2011home[reala2011home$hgoal == reala2011home$vgoal,])
+#Home losses
+real_h_lost <- nrow(reala2011home[reala2011home$hgoal < reala2011home$vgoal,])
+#Away losses
+real_a_lost <- nrow(reala2011away[reala2011away$hgoal > reala2011away$vgoal,])
+#Away draws
+real_a_draw <- nrow(reala2011away[reala2011away$hgoal == reala2011away$vgoal,])
+#Away wins
+real_a_win <- nrow(reala2011away[reala2011away$hgoal < reala2011away$vgoal,])
+
+#Atletico Madrid games in 2011 season
+atleticoGameshome <- laliga[which(laliga$home == "Atletico Madrid") ,]
+atleticoa2011home <- subset(atleticoGameshome, atleticoGameshome$Season >= 2011,
+                            select= c(Season, home, visitor, hgoal, vgoal))
+
+atleticoGamesaway <- laliga[which(laliga$visitor == "Atletico Madrid"),]
+atleticoa2011away <- subset(atleticoGamesaway, atleticoGamesaway$Season >= 2011,
+                            select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+atletico_h_win <- nrow(atleticoa2011home[atleticoa2011home$hgoal > atleticoa2011home$vgoal,])
+#Home draws
+atletico_h_draw <- nrow(atleticoa2011home[atleticoa2011home$hgoal == atleticoa2011home$vgoal,])
+#Home losses
+atletico_h_lost <- nrow(atleticoa2011home[atleticoa2011home$hgoal < atleticoa2011home$vgoal,])
+#Away losses
+atletico_a_lost <- nrow(atleticoa2011away[atleticoa2011away$hgoal > atleticoa2011away$vgoal,])
+#Away draws
+atletico_a_draw <- nrow(atleticoa2011away[atleticoa2011away$hgoal == atleticoa2011away$vgoal,])
+#Away wins
+atletico_a_win <- nrow(atleticoa2011away[atleticoa2011away$hgoal < atleticoa2011away$vgoal,])
+
+#Sevilla FC games in 2011 season
+sevillaGameshome <- laliga[which(laliga$home == "Sevilla FC") ,]
+sevillaa2011home <- subset(sevillaGameshome, sevillaGameshome$Season >= 2011,
+                           select= c(Season, home, visitor, hgoal, vgoal))
+
+sevillaGamesaway <- laliga[which(laliga$visitor == "Sevilla FC"),]
+sevillaa2011away <- subset(sevillaGamesaway, sevillaGamesaway$Season >= 2011,
+                           select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+sevilla_h_win <- nrow(sevillaa2011home[sevillaa2011home$hgoal > sevillaa2011home$vgoal,])
+#Home draws
+sevilla_h_draw <- nrow(sevillaa2011home[sevillaa2011home$hgoal == sevillaa2011home$vgoal,])
+#Home losses
+sevilla_h_lost <- nrow(sevillaa2011home[sevillaa2011home$hgoal < sevillaa2011home$vgoal,])
+#Away losses
+sevilla_a_lost <- nrow(sevillaa2011away[sevillaa2011away$hgoal > sevillaa2011away$vgoal,])
+#Away draws
+sevilla_a_draw <- nrow(sevillaa2011away[sevillaa2011away$hgoal == sevillaa2011away$vgoal,])
+#Away wins
+sevilla_a_win <- nrow(sevillaa2011away[sevillaa2011away$hgoal < sevillaa2011away$vgoal,])
+
+#Athletic Bilbao games in 2011 season
+bilbaoGameshome <- laliga[which(laliga$home == "Athletic Bilbao") ,]
+bilbaoa2011home <- subset(bilbaoGameshome, bilbaoGameshome$Season >= 2011,
+                          select= c(Season, home, visitor, hgoal, vgoal))
+
+bilbaoGamesaway <- laliga[which(laliga$visitor == "Athletic Bilbao"),]
+bilbaoa2011away <- subset(bilbaoGamesaway, bilbaoGamesaway$Season >= 2011,
+                          select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+bilbao_h_win <- nrow(bilbaoa2011home[bilbaoa2011home$hgoal > bilbaoa2011home$vgoal,])
+#Home draws
+bilbao_h_draw <- nrow(bilbaoa2011home[bilbaoa2011home$hgoal == bilbaoa2011home$vgoal,])
+#Home losses
+bilbao_h_lost <- nrow(bilbaoa2011home[bilbaoa2011home$hgoal < bilbaoa2011home$vgoal,])
+#Away losses
+bilbao_a_lost <- nrow(bilbaoa2011away[bilbaoa2011away$hgoal > bilbaoa2011away$vgoal,])
+#Away draws
+bilbao_a_draw <- nrow(bilbaoa2011away[bilbaoa2011away$hgoal == bilbaoa2011away$vgoal,])
+#Away wins
+bilbao_a_win <- nrow(bilbaoa2011away[bilbaoa2011away$hgoal < bilbaoa2011away$vgoal,])
+
+
+#Make table of the Bundesliga (Germany) from beginning of 2011 season to end of 2016 season
+maketable_all(df = germany,  begin = "2011-07-15", end = "2017-05-21" )
+
+#Bayern Munchen games in 2011 season
+bayernGameshome <- bundes[which(bundes$home == "Bayern Munchen") ,]
+bayerna2011home <- subset(bayernGameshome, bayernGameshome$Season >= 2011,
+                          select= c(Season, home, visitor, hgoal, vgoal))
+
+bayernGamesaway <- bundes[which(bundes$visitor == "Bayern Munchen"),]
+bayerna2011away <- subset(bayernGamesaway, bayernGamesaway$Season >= 2011,
+                          select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+bayern_h_win <- nrow(bayerna2011home[bayerna2011home$hgoal > bayerna2011home$vgoal,])
+#Home draws
+bayern_h_draw <- nrow(bayerna2011home[bayerna2011home$hgoal == bayerna2011home$vgoal,])
+#Home losses
+bayern_h_lost <- nrow(bayerna2011home[bayerna2011home$hgoal < bayerna2011home$vgoal,])
+#Away losses
+bayern_a_lost <- nrow(bayerna2011away[bayerna2011away$hgoal > bayerna2011away$vgoal,])
+#Away draws
+bayern_a_draw <- nrow(bayerna2011away[bayerna2011away$hgoal == bayerna2011away$vgoal,])
+#Away wins
+bayern_a_win <- nrow(bayerna2011away[bayerna2011away$hgoal < bayerna2011away$vgoal,])
+
+#Borussia Dortmund games in 2011 season
+dortmundGameshome <- bundes[which(bundes$home == "Borussia Dortmund") ,]
+dortmunda2011home <- subset(dortmundGameshome, dortmundGameshome$Season >= 2011,
+                            select= c(Season, home, visitor, hgoal, vgoal))
+
+dortmundGamesaway <- bundes[which(bundes$visitor == "Borussia Dortmund"),]
+dortmunda2011away <- subset(dortmundGamesaway, dortmundGamesaway$Season >= 2011,
+                            select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+dortmund_h_win <- nrow(dortmunda2011home[dortmunda2011home$hgoal > dortmunda2011home$vgoal,])
+#Home draws
+dortmund_h_draw <- nrow(dortmunda2011home[dortmunda2011home$hgoal == dortmunda2011home$vgoal,])
+#Home losses
+dortmund_h_lost <- nrow(dortmunda2011home[dortmunda2011home$hgoal < dortmunda2011home$vgoal,])
+#Away losses
+dortmund_a_lost <- nrow(dortmunda2011away[dortmunda2011away$hgoal > dortmunda2011away$vgoal,])
+#Away draws
+dortmund_a_draw <- nrow(dortmunda2011away[dortmunda2011away$hgoal == dortmunda2011away$vgoal,])
+#Away Wins
+dortmund_a_win <- nrow(dortmunda2011away[dortmunda2011away$hgoal < dortmunda2011away$vgoal,])
+
+#Bayer Leverkusen games in 2011 season
+leverkusenGameshome <- bundes[which(bundes$home == "Bayer Leverkusen") ,]
+leverkusena2011home <- subset(leverkusenGameshome, leverkusenGameshome$Season >= 2011,
+                              select= c(Season, home, visitor, hgoal, vgoal))
+
+leverkusenGamesaway <- bundes[which(bundes$visitor == "Bayer Leverkusen"),]
+leverkusena2011away <- subset(leverkusenGamesaway, leverkusenGamesaway$Season >= 2011,
+                              select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+leverkusen_h_win <- nrow(leverkusena2011home[leverkusena2011home$hgoal > leverkusena2011home$vgoal,])
+#Home draws
+leverkusen_h_draw <- nrow(leverkusena2011home[leverkusena2011home$hgoal == leverkusena2011home$vgoal,])
+#Home losses
+leverkusen_h_lost <- nrow(leverkusena2011home[leverkusena2011home$hgoal < leverkusena2011home$vgoal,])
+#Away losses
+leverkusen_a_lost <- nrow(leverkusena2011away[leverkusena2011away$hgoal > leverkusena2011away$vgoal,])
+#Away draws
+leverkusen_a_draw <- nrow(leverkusena2011away[leverkusena2011away$hgoal == leverkusena2011away$vgoal,])
+#Away wins
+leverkusen_a_win <- nrow(leverkusena2011away[leverkusena2011away$hgoal < leverkusena2011away$vgoal,])
+
+#Bor. Monchengladbach games in 2011 season
+borussiaGameshome <- bundes[which(bundes$home == "Bor. Monchengladbach") ,]
+borussiaa2011home <- subset(borussiaGameshome, borussiaGameshome$Season >= 2011,
+                            select= c(Season, home, visitor, hgoal, vgoal))
+
+borussiaGamesaway <- bundes[which(bundes$visitor == "Bor. Monchengladbach"),]
+borussiaa2011away <- subset(borussiaGamesaway, borussiaGamesaway$Season >= 2011,
+                            select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+borussia_h_win <- nrow(borussiaa2011home[borussiaa2011home$hgoal > borussiaa2011home$vgoal,])
+#Home draws
+borussia_h_draw <- nrow(borussiaa2011home[borussiaa2011home$hgoal == borussiaa2011home$vgoal,])
+#Home losses
+borussia_h_lost <- nrow(borussiaa2011home[borussiaa2011home$hgoal < borussiaa2011home$vgoal,])
+#Away losses
+borussia_a_lost <- nrow(borussiaa2011away[borussiaa2011away$hgoal > borussiaa2011away$vgoal,])
+#Away draws
+borussia_a_draw <- nrow(borussiaa2011away[borussiaa2011away$hgoal == borussiaa2011away$vgoal,])
+#Away wins
+borussia_a_win <- nrow(borussiaa2011away[borussiaa2011away$hgoal < borussiaa2011away$vgoal,])
+
+#FC Schalke 04 games in 2011 season
+SchalkeGameshome <- bundes[which(bundes$home == "FC Schalke 04") ,]
+Schalkea2011home <- subset(SchalkeGameshome, SchalkeGameshome$Season >= 2011,
+                          select= c(Season, home, visitor, hgoal, vgoal))
+
+SchalkeGamesaway <- bundes[which(bundes$visitor == "FC Schalke 04"),]
+Schalkea2011away <- subset(SchalkeGamesaway, SchalkeGamesaway$Season >= 2011,
+                          select = c(Season, home, visitor, hgoal, vgoal))
+
+#Home wins
+Schalke_h_win <- nrow(Schalkea2011home[Schalkea2011home$hgoal > Schalkea2011home$vgoal,])
+#Home draws
+Schalke_h_draw <- nrow(Schalkea2011home[Schalkea2011home$hgoal == Schalkea2011home$vgoal,])
+#Home losses
+Schalke_h_lost <- nrow(Schalkea2011home[Schalkea2011home$hgoal < Schalkea2011home$vgoal,])
+#Away losses
+Schalke_a_lost <- nrow(Schalkea2011away[Schalkea2011away$hgoal > Schalkea2011away$vgoal,])
+#Away draws
+Schalke_a_draw <- nrow(Schalkea2011away[Schalkea2011away$hgoal == Schalkea2011away$vgoal,])
+#Away wins
+Schalke_a_win <- nrow(Schalkea2011away[Schalkea2011away$hgoal < Schalkea2011away$vgoal,])
+
+```
+
+```{r win_per_data, include = FALSE}
+
+
+
+
+```
+
+```{r creation_of_data_for_graphs_for_non-losses, include = FALSE}
+#Graphs for each league
+italy_names <- c("Juventus", "SSC Napoli", "AS Roma", "AC Milan", "Lazio")
+italy_names <- as.data.frame(italy_names)
+italy_h_wins <- c(juve_h_win+juve_h_draw, napoli_h_win+napoli_h_draw, roma_h_win+roma_h_draw, milan_h_win+milan_h_draw, lazio_h_win+lazio_h_draw)
+italy_h_wins <- as.data.frame(italy_h_wins)
+italy_league <- c("Serie A","Serie A","Serie A","Serie A","Serie A")
+italy_league <- as.data.frame(italy_league)
+italy_total <- as.data.frame(c(italy_names, italy_h_wins, italy_league))
+
+france_names <- c("PSG", "ASSE", "Lille", "Marseille", "Lyon")
+france_names <- as.data.frame(france_names)
+france_h_wins <- c(psg_h_win+psg_h_draw, asse_h_win+asse_h_draw, lille_h_win+lille_h_draw, marseille_h_win+marseille_h_draw, lyon_h_win+lyon_h_draw)
+france_h_wins <- as.data.frame(france_h_wins)
+france_league <- c("Ligue 1","Ligue 1","Ligue 1","Ligue 1","Ligue 1")
+france_league <- as.data.frame(france_league)
+france_total <- as.data.frame(c(france_names, france_h_wins, france_league))
+
+england_names <- c("Manchester City", "Manchester United", "Arsenal", "Chelsea", "Tottenham")
+england_names <- as.data.frame(england_names)
+england_h_wins <- c(city_h_win+city_h_draw, united_h_win+united_h_draw, arsenal_h_win+arsenal_h_draw, chelsea_h_win+chelsea_h_draw, tott_h_win+tott_h_draw)
+england_h_wins <- as.data.frame(england_h_wins)
+england_league <- c("Premier League","Premier League","Premier League","Premier League","Premier League")
+england_league <- as.data.frame(england_league)
+england_total <- as.data.frame(c(england_names, england_h_wins, england_league))
+
+germany_names <- c("Bayern Munchen", "Borussia Dortmund", "Monchengladbach", "Bayer Leverkusen", "FC Schalke 04")
+germany_names <- as.data.frame(germany_names)
+germany_h_wins <- c(bayern_h_win+bayern_h_draw, dortmund_h_win+dortmund_h_draw, borussia_h_win+borussia_h_draw, leverkusen_h_win+leverkusen_h_draw, Schalke_h_win+Schalke_h_draw)
+germany_h_wins <- as.data.frame(germany_h_wins)
+germany_league <- c("Bundesliga","Bundesliga","Bundesliga","Bundesliga","Bundesliga")
+germany_league <- as.data.frame(germany_league)
+germany_total <- as.data.frame(c(germany_names, germany_h_wins, germany_league))
+
+spain_names <- c("FC Barcelona", "Real Madrid", "Atletico Madrid", "Sevilla FC", "Athletic Bilbao")
+spain_names <- as.data.frame(spain_names)
+spain_h_wins <- c(barca_h_win+barca_h_draw, real_h_win+real_h_draw, atletico_h_win+atletico_h_draw, sevilla_h_win+sevilla_h_draw, bilbao_h_win+bilbao_h_draw)
+spain_h_wins <- as.data.frame(spain_h_wins)
+spain_league <- c("La Liga","La Liga","La Liga","La Liga","La Liga")
+spain_league <- as.data.frame(spain_league)
+spain_total <- as.data.frame(c(spain_names, spain_h_wins, spain_league))
+
+colnames(italy_total) <- c("Team", "Number.of.Home.Wins.and.Draws", "League")
+colnames(france_total) <- c("Team", "Number.of.Home.Wins.and.Draws", "League")
+colnames(england_total) <- c("Team", "Number.of.Home.Wins.and.Draws", "League")
+colnames(germany_total) <- c("Team", "Number.of.Home.Wins.and.Draws", "League")
+colnames(spain_total) <- c("Team", "Number.of.Home.Wins.and.Draws", "League")
+
+total_h_wins <- rbind(italy_total, france_total, england_total, germany_total, spain_total)
+
+#Win percentage at home vs. win percentage away graph data
+juve_total_h_games <- nrow(juvea2011home)
+juve_total_a_games <- nrow(juvea2011away)
+juve_h_win_per <- juve_h_win/juve_total_h_games
+juve_a_win_per <- juve_a_win/juve_total_a_games
+
+
+napoli_total_h_games <- nrow(napolia2011home)
+napoli_total_a_games <- nrow(napolia2011away)
+napoli_h_win_per <- napoli_h_win/napoli_total_h_games
+napoli_a_win_per <- napoli_a_win/napoli_total_a_games
+
+roma_total_h_games <- nrow(romaa2011home)
+roma_total_a_games <- nrow(romaa2011away)
+roma_h_win_per <- roma_h_win/roma_total_h_games
+roma_a_win_per <- roma_a_win/roma_total_a_games
+
+milan_total_h_games <- nrow(milana2011home)
+milan_total_a_games <- nrow(milana2011away)
+milan_h_win_per <- milan_h_win/milan_total_h_games
+milan_a_win_per <- milan_a_win/milan_total_a_games
+
+lazio_total_h_games <- nrow(lazioa2011home)
+lazio_total_a_games <- nrow(lazioa2011away)
+lazio_h_win_per <- lazio_h_win/lazio_total_h_games
+lazio_a_win_per <- lazio_a_win/lazio_total_a_games
+
+psg_total_h_games <- nrow(psga2011home)
+psg_total_a_games <- nrow(psga2011away)
+psg_h_win_per <- psg_h_win/psg_total_h_games
+psg_a_win_per <- psg_a_win/psg_total_a_games
+
+lille_total_h_games <- nrow(lillea2011home)
+lille_total_a_games <- nrow(lillea2011away)
+lille_h_win_per <- lille_h_win/lille_total_h_games
+lille_a_win_per <- lille_a_win/lille_total_a_games
+
+lyon_total_h_games <- nrow(lyona2011home)
+lyon_total_a_games <- nrow(lyona2011away)
+lyon_h_win_per <- lyon_h_win/lyon_total_h_games
+lyon_a_win_per <- lyon_a_win/lyon_total_a_games
+
+marseille_total_h_games <- nrow(marseillea2011home)
+marseille_total_a_games <- nrow(marseillea2011away)
+marseille_h_win_per <- marseille_h_win/marseille_total_h_games
+marseille_a_win_per <- marseille_a_win/marseille_total_a_games
+
+asse_total_h_games <- nrow(assea2011home)
+asse_total_a_games <- nrow(assea2011away)
+asse_h_win_per <- asse_h_win/asse_total_h_games
+asse_a_win_per <- asse_a_win/asse_total_a_games
+
+dortmund_total_h_games <- nrow(dortmunda2011home)
+dortmund_total_a_games <- nrow(dortmunda2011away)
+dortmund_h_win_per <- dortmund_h_win/dortmund_total_h_games
+dortmund_a_win_per <- dortmund_a_win/dortmund_total_a_games
+
+bayern_total_h_games <- nrow(bayerna2011home)
+bayern_total_a_games <- nrow(bayerna2011away)
+bayern_h_win_per <- bayern_h_win/bayern_total_h_games
+bayern_a_win_per <- bayern_a_win/bayern_total_a_games
+
+leverkusen_total_h_games <- nrow(leverkusena2011home)
+leverkusen_total_a_games <- nrow(leverkusena2011away)
+leverkusen_h_win_per <- leverkusen_h_win/leverkusen_total_h_games
+leverkusen_a_win_per <- leverkusen_a_win/leverkusen_total_a_games
+
+borussia_total_h_games <- nrow(borussiaa2011home)
+borussia_total_a_games <- nrow(borussiaa2011away)
+borussia_h_win_per <- borussia_h_win/borussia_total_h_games
+borussia_a_win_per <- borussia_a_win/borussia_total_a_games
+
+schalke_total_h_games <- nrow(Schalkea2011home)
+schalke_total_a_games <- nrow(Schalkea2011away)
+schalke_h_win_per <- Schalke_h_win/schalke_total_h_games
+schalke_a_win_per <- Schalke_a_win/schalke_total_a_games
+
+real_total_h_games <- nrow(reala2011home)
+real_total_a_games <- nrow(reala2011away)
+real_h_win_per <- real_h_win/real_total_h_games
+real_a_win_per <- real_a_win/real_total_a_games
+
+barca_total_h_games <- nrow(barcaa2011home)
+barca_total_a_games <- nrow(barcaa2011away)
+barca_h_win_per <- barca_h_win/barca_total_h_games
+barca_a_win_per <- barca_a_win/barca_total_a_games
+
+atletico_total_h_games <- nrow(atleticoa2011home)
+atletico_total_a_games <- nrow(atleticoa2011away)
+atletico_h_win_per <- atletico_h_win/atletico_total_h_games
+atletico_a_win_per <- atletico_a_win/atletico_total_a_games
+
+sevilla_total_h_games <- nrow(sevillaa2011home)
+sevilla_total_a_games <- nrow(sevillaa2011away)
+sevilla_h_win_per <- sevilla_h_win/sevilla_total_h_games
+sevilla_a_win_per <- sevilla_a_win/sevilla_total_a_games
+
+bilbao_total_h_games <- nrow(bilbaoa2011home)
+bilbao_total_a_games <- nrow(bilbaoa2011away)
+bilbao_h_win_per <- bilbao_h_win/bilbao_total_h_games
+bilbao_a_win_per <- bilbao_a_win/bilbao_total_a_games
+
+city_total_h_games <- nrow(citymana2011home)
+city_total_a_games <- nrow(citymana2011away)
+city_h_win_per <- city_h_win/city_total_h_games
+city_a_win_per <- city_a_win/city_total_a_games
+
+united_total_h_games <- nrow(manUa2011home)
+united_total_a_games <- nrow(manUa2011away)
+united_h_win_per <- united_h_win/united_total_h_games
+united_a_win_per <- united_a_win/united_total_a_games
+
+tott_total_h_games <- nrow(tottenhama2011home)
+tott_total_a_games <- nrow(tottenhama2011away)
+tott_h_win_per <- tott_h_win/tott_total_h_games
+tott_a_win_per <- tott_a_win/tott_total_a_games
+
+arsenal_total_h_games <- nrow(arsenala2011home)
+arsenal_total_a_games <- nrow(arsenala2011away)
+arsenal_h_win_per <- arsenal_h_win/arsenal_total_h_games
+arsenal_a_win_per <- arsenal_a_win/arsenal_total_a_games
+
+chelsea_total_h_games <- nrow(chelseaa2011home)
+chelsea_total_a_games <- nrow(chelseaa2011away)
+chelsea_h_win_per <- chelsea_h_win/chelsea_total_h_games
+chelsea_a_win_per <- chelsea_a_win/chelsea_total_a_games
+
+#Calculate # of Games won/drawn/and tied in total
+juve <- data.frame(Team = "Juventus", Wins = juve_h_win+juve_a_win, Draws = juve_h_draw + juve_a_draw, Lost = juve_h_lost + juve_a_lost, H_Win_Perc = 100*juve_h_win_per, A_Win_Perc = 100*juve_a_win_per, League = "Serie A")
+napoli <- data.frame(Team = "SSC Napoli", Wins = napoli_h_win+napoli_a_win, Draws = napoli_h_draw + napoli_a_draw, Lost = napoli_h_lost + napoli_a_lost, H_Win_Perc = 100*napoli_h_win_per, A_Win_Perc = 100*napoli_a_win_per, League = "Serie A")
+roma <- data.frame(Team = "AS Roma", Wins = roma_h_win+roma_a_win, Draws = roma_h_draw + roma_a_draw, Lost = roma_h_lost + roma_a_lost, H_Win_Perc = 100*roma_h_win_per, A_Win_Perc = 100*roma_a_win_per, League = "Serie A")
+milan <- data.frame(Team = "AC Milan", Wins = milan_a_win + milan_h_win, Draws = milan_a_draw + milan_h_draw, Lost = milan_a_lost+milan_h_lost, H_Win_Perc = 100*milan_h_win_per, A_Win_Perc = 100*milan_a_win_per, League = "Serie A")
+lazio <- data.frame(Team = "Lazio", Wins = lazio_a_win+lazio_h_win, Draws = lazio_a_draw+lazio_h_draw, Lost = lazio_a_lost+lazio_h_lost, H_Win_Perc = 100*lazio_h_win_per, A_Win_Perc = 100*lazio_a_win_per, League = "Serie A")
+psg <- data.frame(Team = "Paris Saint-Germain", Wins = psg_h_win+psg_a_win, Draws = psg_h_draw + psg_a_draw, Lost = psg_h_lost + psg_a_lost, H_Win_Perc = 100*psg_h_win_per, A_Win_Perc = 100*psg_a_win_per, League = "Ligue 1")
+lille <- data.frame(Team = "Lille", Wins = lille_h_win+lille_a_win, Draws = lille_h_draw + lille_a_draw, Lost = lille_h_lost + lille_a_lost,H_Win_Perc = 100*lille_h_win_per, A_Win_Perc = 100*lille_a_win_per, League = "Ligue 1")
+marseille <- data.frame(Team = "Marseille", Wins = marseille_h_win+marseille_a_win, Draws = marseille_h_draw + marseille_a_draw, Lost = marseille_h_lost + marseille_a_lost, H_Win_Perc = 100*marseille_h_win_per, A_Win_Perc = 100*marseille_a_win_per, League = "Ligue 1")
+lyon <- data.frame(Team = "Lyon", Wins = lyon_a_win + lyon_h_win, Draws = lyon_a_draw + lyon_h_draw, Lost = lyon_a_lost+lyon_h_lost, H_Win_Perc = 100*lyon_h_win_per, A_Win_Perc = 100*lyon_a_win_per, League = "Ligue 1")
+asse <- data.frame(Team = "ASSE", Wins = asse_a_win+asse_h_win, Draws = asse_a_draw+asse_h_draw, Lost = asse_a_lost+asse_h_lost, H_Win_Perc = 100*asse_h_win_per, A_Win_Perc = 100*asse_a_win_per, League = "Ligue 1")
+bayern <- data.frame(Team = "Bayern Munchen", Wins = psg_h_win+psg_a_win, Draws = psg_h_draw + psg_a_draw, Lost = psg_h_lost + psg_a_lost, H_Win_Perc = 100*bayern_h_win_per, A_Win_Perc = 100*bayern_a_win_per, League = "Bundesliga")
+dortmund <- data.frame(Team = "Borussia Dortmund", Wins = dortmund_h_win+dortmund_a_win, Draws = dortmund_h_draw + dortmund_a_draw, Lost = dortmund_h_lost + dortmund_a_lost,H_Win_Perc = 100*dortmund_h_win_per, A_Win_Perc = 100*dortmund_a_win_per, League = "Bundesliga")
+borussia <- data.frame(Team = "Bor. Monchengladbach", Wins = borussia_h_win+borussia_a_win, Draws = borussia_h_draw + borussia_a_draw, Lost = borussia_h_lost + borussia_a_lost, H_Win_Perc = 100*borussia_h_win_per, A_Win_Perc = 100*borussia_a_win_per, League = "Bundesliga")
+leverkusen <- data.frame(Team = "Bayer Leverkusen", Wins = leverkusen_a_win + leverkusen_h_win, Draws = leverkusen_a_draw + leverkusen_h_draw, Lost = leverkusen_a_lost+leverkusen_h_lost, H_Win_Perc = 100*leverkusen_h_win_per, A_Win_Perc = 100*leverkusen_a_win_per, League = "Bundesliga")
+schalke <- data.frame(Team = "FC Schalke 04", Wins = Schalke_a_win+Schalke_h_win, Draws = Schalke_a_draw+Schalke_h_draw, Lost = Schalke_a_lost+Schalke_h_lost, H_Win_Perc = 100*schalke_h_win_per, A_Win_Perc = 100*schalke_a_win_per, League = "Bundesliga")
+barca <- data.frame(Team = "FC Barcelona", Wins = barca_h_win+barca_a_win, Draws = barca_h_draw + barca_a_draw, Lost = barca_h_lost + barca_a_lost, H_Win_Perc = 100*barca_h_win_per, A_Win_Perc = 100*barca_a_win_per, League = "La Liga")
+real <- data.frame(Team = "Real Madrid", Wins = real_h_win+real_a_win, Draws = real_h_draw + real_a_draw, Lost = real_h_lost + real_a_lost, H_Win_Perc = 100*real_h_win_per, A_Win_Perc = 100*real_a_win_per, League = "La Liga")
+atletico <- data.frame(Team = "Atletico Madrid", Wins = atletico_h_win+atletico_a_win, Draws = atletico_h_draw + atletico_a_draw, Lost = atletico_h_lost + atletico_a_lost, H_Win_Perc = 100*atletico_h_win_per, A_Win_Perc = 100*atletico_a_win_per, League = "La Liga")
+sevilla <- data.frame(Team = "Sevilla FC", Wins = sevilla_a_win + sevilla_h_win, Draws = sevilla_a_draw + sevilla_h_draw, Lost = sevilla_a_lost+sevilla_h_lost, H_Win_Perc = 100*sevilla_h_win_per, A_Win_Perc = 100*sevilla_a_win_per, League = "La Liga")
+bilbao <- data.frame(Team = "Athletic Bilbao", Wins = bilbao_a_win+bilbao_h_win, Draws = bilbao_a_draw+bilbao_h_draw, Lost = bilbao_a_lost+bilbao_h_lost, H_Win_Perc = 100*bilbao_h_win_per, A_Win_Perc = 100*bilbao_a_win_per, League = "La Liga")
+city <- data.frame(Team = "Manchester City", Wins = city_h_win+city_a_win, Draws = city_h_draw + city_a_draw, Lost = city_h_lost + city_a_lost, H_Win_Perc = 100*city_h_win_per, A_Win_Perc = 100*city_a_win_per, League = "Premier League")
+united <- data.frame(Team = "Manchester United", Wins = united_h_win+united_a_win, Draws = united_h_draw + united_a_draw, Lost = united_h_lost + united_a_lost, H_Win_Perc = 100*united_h_win_per, A_Win_Perc = 100*united_a_win_per, League = "Premier League")
+chelsea <- data.frame(Team = "Chelsea", Wins = chelsea_h_win+chelsea_a_win, Draws = chelsea_h_draw + chelsea_a_draw, Lost = chelsea_h_lost + chelsea_a_lost, H_Win_Perc = 100*chelsea_h_win_per, A_Win_Perc = 100*chelsea_a_win_per, League = "Premier League")
+arsenal <- data.frame(Team = "Arsenal", Wins = arsenal_a_win + arsenal_h_win, Draws = arsenal_a_draw + arsenal_h_draw, Lost = arsenal_a_lost+arsenal_h_lost, H_Win_Perc = 100*arsenal_h_win_per, A_Win_Perc = 100*arsenal_a_win_per, League = "Premier League")
+tott <- data.frame(Team = "Tottenham", Wins = tott_a_win+tott_h_win, Draws = tott_a_draw+tott_h_draw, Lost = tott_a_lost+tott_h_lost, H_Win_Perc = 100*tott_h_win_per, A_Win_Perc = 100*tott_a_win_per, League = "Premier League")
+
+total_teams <- rbind(juve, napoli, roma, milan, lazio, psg, lille, marseille, lyon, asse, bayern, dortmund, borussia, leverkusen, schalke, barca, real, atletico, sevilla, bilbao, city, united, chelsea, arsenal, tott)
+```
+
+
+
+Now, to find which teams are the most formidable in Europe, we need to see how a team stacks up wins, losses, and draws next to each other.
+
+The first graph shows each team's wins, losses and draws next to each other and we can see which team won the most and which team lost the least.
+
+```{r graphs_1, echo=FALSE}
+wins_lost_scatter <- plot_ly(total_teams, x = ~Wins, y = ~Team, name = "Wins", type = 'scatter',
+               mode = "markers", marker = list(color = "green")) %>%
+  add_trace(x = ~Draws, y = ~Team, name = "Draws", type = 'scatter',
+            mode = "markers", marker = list(color = "blue")) %>%
+  add_trace(x = ~Lost, y = ~Team, name = "Lost", type = 'scatter',
+            mode = "markers", marker = list(color = "red")) %>%
+  layout(
+    title = "Wins, losses and draws from 2011 2011-2016",
+    xaxis = list(title = "Number of games")
+  )
+wins_lost_scatter
+```
+From this graph, we see that the top 5 teams that have won the most are Barcelona (174), Real Madrid (172), Juventus (167), Bayern Munchen (156), and PSG (156). Of course these teams are also the teams that have lost the least amount of games. 
+
+Also something to note from this graph, we see that some teams have actually lost more games than they have drawn. No team has drawn or lost more games than they have won, due to the nature that these teams are all top 5 for the past 5 seaons. Only a few teams have lost more than drawn, and most of those are close in numbers, but there are a few where we see a significant difference, as in Lazio, Atheltic Bilabo and Sevilla.
+
+Based on this graph alone, we infer that Barcelona, Real Madrid, Juventus, Bayern Munchen and PSG are the top 5 teams in Europe, none of which come from England. But maybe there is a different picture to pain based on how each team plays at home.
+
+```{r graphs_2, echo= FALSE}
+
+wins_home <- plot_ly(data=total_h_wins, x = ~League, y = ~Number.of.Home.Wins.and.Draws, color = ~ League, type = "box") %>%
+  layout(boxmode = "group")
+wins_home
+
+```
+This graph shows the average number of times a team in the top 5 of the league come out with a positive (meaning win or tie) result. Due to the number of games played, the Bundesliga has a lower number of positive results, yet the top team, Bayern Munchen, has more positive results than the average of the top 5 teams in France (Ligue 1). This is interesting to see as most leagues have at least an average of 100 games over the past 5 years with a positive result in each game, but France and the Bundesliga are lower. The Bundesliga has a lower number due to games played and if they played moire, chances are that the number would be higher had they played 24 more games. 
+
+For Ligue 1, the average is lower due to the fact that the top 5 over the past 5 years have not been as consistent as the numbers show. AS Monaco, which was ranked #9 in the table, won the 2016 season, but they also spent two years in the league below (Ligue 2) so, had they not been in the lower division those two years, the team would be higher, and they have since held a high position on the table the 3 years they played. Not only that, but the teams in France, other than PSG tend to be very inconsistent, coming from my knowledge of the teams in the top 5. PSG is the only consistent team, especially after seeing the point difference between 1st and 2nd (517 compared to 399). But number of wins at home may not seem very significant. What if we were to calculate their win percentage at home and away and see which teams are the most formidable away and at home in Europe.
+
+```{r graphs_3, echo = FALSE}
+
+win_perc <- plot_ly(data = total_teams, x = ~H_Win_Perc, y = ~A_Win_Perc,
+               color = ~League,
+               hoverinfo = 'text',
+               text = ~paste('</br>',Team, 
+                              '</br> Away: ', ceiling(A_Win_Perc), '%',
+                              '</br> Home: ', ceiling(H_Win_Perc), '%')) %>%
+  layout(
+    title = "Win Percentage Away vs. At Home",
+    xaxis = list(title = "Home Win Percentage (%)"),
+    yaxis = list(title = "Away Win Percentage(%)")
+  )
+
+win_perc
+```
+From this graph, the top 5 teams are of course at the top right, with only 4 of them having about an 80% win percentage at home, PSG having about a 75% win percentage at home. Below PSG is Manchester City sitting with a lower away win percentage but a higher home win percentage. We see that Manchester City is probably the best English team as it has the best win percentage away and at home, even though their away percentage is low compared to my top teams of Europe (the top 5 indicated before).
+
+Something to note from this graph is that the English teams are all clustered around the 50% win percentage away and between 60-70% home win percentage. My inference is that in England, playing away is difficult in general and no team always dominated away, but they go into an away game with at least a 50% chance to win the game. 
+
+From this graph, we see that no matter where the game is being played, no team in their league wants to face Barcelona, Real Madrid, Juventus, Bayern Munchen, or PSG, due to the fact that the team has a high chance of winning that game. Going back to the inconsistencies of the French league, we see that the other top teams in France have a lower Away and Home win percentage thus making the game for them tougher and thus are due to them being significantly weaker than PSG.
+
+Serie A has had only one winner in the past 6 seasons, Juventus. That could mean that the league is weak, but over the past 1.5 seasons (including the ongoing season), we see that competition has come back and thus the league is not as weak as before. The English league has always been tough, and no matter who plays where, teams are always going to struggle to win, even the top teams as they have a lower home and away win percentage than the top 5 in Europe.
+
+
+## Conclusion
+
+Overall, the English league is probably the strongest due to the top 5 teams all being near each other when it comes to their win percentage, while the weakest league is probably the French league as their top 5 teams winning less away and home (other than PSG).
+
+But in the end, we can see that the top teams in Europe are Barcelona, Real Madrid, Juventus, Bayern Munchen, and PSG especially considering that they have won their league the most times in the past 5 years. 
